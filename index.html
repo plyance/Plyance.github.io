@@ -1,105 +1,173 @@
----
-layout: default
----
-<div class="search-container">
-  <input type="text" id="search-input" placeholder="search blog posts..." style="width: 90%;
-    height: 35px;
-    color: #333;
-    background-color: rgba(227,231,236,.2);
-    line-height: 35px;
-    margin-top: 20px;
-    padding:10px 16px;
-    border: 1px solid #c0c0c0;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 17px;
-    outline: none;
-    box-sizing: border-box;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);">
-  <ul id="results-container"></ul>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plyance</title>
+<style>
+    /* 基础重置 */
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* 防止过渡期间出现滚动条 */
+        background-color: #000;
+        font-family: Arial, sans-serif;
+    }
+
+    /* 视图层通用样式 */
+    .view-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transition: opacity 1s ease-in-out;
+    }
+
+    /* ========== 1. 欢迎页面 ========== */
+    #layer-welcome {
+        z-index: 30;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 15vh; /* 控制START按钮在距离底部15%的位置 */
+        box-sizing: border-box;
+    }
+
+    /* 背景滑动动画 */
+    .bg-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        /* 请将下方URL替换为实际的背景图片路径 */
+        background-image: url('your-background-image.jpg');
+        background-size: cover;
+        background-repeat: no-repeat;
+        /* 从左侧开始显示 */
+        background-position: 0% center; 
+        /* linear保证匀速，infinite保证无限循环 */
+        animation: slideBackground 30s linear infinite alternate; 
+    }
+
+    /* 背景向右滑动 (即视口在图片上向左移动，通过改变百分比实现) */
+    @keyframes slideBackground {
+        0% { background-position: 0% center; }
+        100% { background-position: 100% center; }
+    }
+
+    /* START 按钮样式 */
+    #btn-start {
+        padding: 12px 48px;
+        font-size: 24px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.3);
+        border: 2px solid #fff;
+        cursor: pointer;
+        letter-spacing: 2px;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+
+    #btn-start:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+    }
+
+    /* ========== 2. 过渡页面 ========== */
+    #layer-transition {
+        z-index: 20;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0; /* 初始隐藏 */
+        pointer-events: none;
+    }
+
+    #layer-transition h1 {
+        color: #fff;
+        font-weight: 300;
+        letter-spacing: 8px;
+        font-size: 2rem;
+    }
+
+    /* ========== 3. 主页面 ========== */
+    #layer-main {
+        z-index: 10;
+        background-color: #f5f5f5;
+        overflow-y: auto; /* 主页面允许滚动 */
+        opacity: 0; /* 初始隐藏 */
+        pointer-events: none;
+    }
+
+    .content-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 50px 20px;
+        color: #333;
+    }
+</style>
+</head>
+<body>
+
+<!-- 欢迎视图 -->
+<div id="layer-welcome" class="view-layer">
+    <div class="bg-slider"></div>
+    <button id="btn-start">START</button>
 </div>
 
-<!--script src="https://unpkg.com/simple-jekyll-search/dest/simple-jekyll-search.min.js"></script-->
-<script src="{{ site.baseurl }}/js/simple-jekyll-search.min.js"></script>
+<!-- 过渡视图 -->
+<div id="layer-transition" class="view-layer">
+    <h1>欢迎回来</h1>
+</div>
+
+<!-- 主页视图 -->
+<div id="layer-main" class="view-layer">
+    <div class="content-container">
+        <h2>系统主页</h2>
+        <p>这是过渡后的主页面内容区域。</p>
+    </div>
+</div>
 
 <script>
-	window.simpleJekyllSearch = new SimpleJekyllSearch({
-	searchInput: document.getElementById('search-input'),
-	resultsContainer: document.getElementById('results-container'),
-	json: '{{ site.baseurl }}/search.json',
-	searchResultTemplate: '<li><a href="{url}?query={query}" title="{desc}">{title}</a></li>',
-	noResultsText: 'No results found',
-	limit: 10,
-	fuzzy: false,
-	exclude: ['Welcome']
-  })
+    document.addEventListener("DOMContentLoaded", () => {
+        const btnStart = document.getElementById("btn-start");
+        const layerWelcome = document.getElementById("layer-welcome");
+        const layerTransition = document.getElementById("layer-transition");
+        const layerMain = document.getElementById("layer-main");
+
+        btnStart.addEventListener("click", () => {
+            // 1. 淡出欢迎页，淡入过渡页
+            layerWelcome.style.opacity = "0";
+            layerWelcome.style.pointerEvents = "none";
+            layerTransition.style.opacity = "1";
+
+            // 2. 设置过渡页停留时间 (此例为 2000 毫秒 / 2秒)
+            setTimeout(() => {
+                // 淡出过渡页
+                layerTransition.style.opacity = "0";
+                
+                // 淡入主页并恢复交互
+                layerMain.style.opacity = "1";
+                layerMain.style.pointerEvents = "auto";
+                
+                // 恢复body滚动条（如果主页高度超出视口）
+                document.body.style.overflow = "auto";
+
+                // 3. 动画结束后移除不需要的DOM节点以释放内存
+                setTimeout(() => {
+                    layerWelcome.remove();
+                    layerTransition.remove();
+                }, 1000); // 1000ms 等待 opacity 渐变结束
+
+            }, 2000); 
+        });
+    });
 </script>
- 
-{% if site.posts.size == 0 %}
-  <h2>No post found</h2>
-{% endif %}
-
-<div class="posts">
-  {% for post in paginator.posts %}
-  {% unless post.draft %}
-    <article class="post">
-      <h1>
-        <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
-      </h1>
-
-      <div class="meta">
-        <span class="date">
-          {{ post.date | date: "%Y-%m-%d" }}
-        </span>
-
-        <ul class="tag">
-          {% for tag in post.tags %}
-          <li>
-            <a href="{{ site.url }}{{ site.baseurl }}/tags#{{ tag }}">
-              {{ tag }}
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-
-      <div class="entry">
-        {{ post.excerpt | truncate: 200 }}
-      </div>
-
-      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a>
-    </article>
-  {% endunless %}
-  {% endfor %}
-</div>
-
-<div class="pagination">
-  {% if paginator.previous_page %}
-    <span class="prev">
-      <a href="{{ site.baseurl }}{{ paginator.previous_page_path }}" class="prev">
-        ← 上一页
-      </a>
-    </span>
-  {% endif %}
-  {% if paginator.next_page %}
-    <span class="next">
-      <a href="{{ site.baseurl}}{{ paginator.next_page_path }}" class="next">
-        下一页 →
-      </a>
-    </span>
-  {% endif %}
-</div>
-
-<!--不算子网站访客统计-->
-<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
-</script>
-<!-- pv的方式，单个用户连续点击n篇文章，记录n次访问量 -->
-<div align="center">
-	<span id="busuanzi_container_site_pv" style="font-family:Consolas;color:Silver;font-size:12px;">
-		View:<span id="busuanzi_value_site_pv" style="font-family:Consolas;color:Silver;font-size:12px;"></span>
-	</span>
-	<!-- uv的方式，单个用户连续点击n篇文章，只记录1次访客数 -->
-	<span id="busuanzi_container_site_uv" style="font-family:Consolas;color:Silver;font-size:12px;">
-		User:<span id="busuanzi_value_site_uv" style="font-family:Consolas;color:Silver;font-size:12px;"></span>
-	</span>
-</div>
+</body>
+</html>
